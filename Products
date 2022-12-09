@@ -1,0 +1,187 @@
+class Products {
+
+    controller = null;
+
+    constructor() {
+        this.controller = 'product_as_owner.d';
+    };
+
+    collectData(fields) {
+        const parent = document.querySelector('.js__filter');
+
+        parent.querySelectorAll('.js__collect-data').forEach((el) => {
+            let array = [];
+            let name = el.dataset.code;
+            let object = {};
+            switch (name) {
+                case 'party':
+                    el.querySelectorAll('.js__input').forEach((input, index) => {
+                        const obj = {};
+                        if (input.value === '0') {
+                            return;
+                        }
+                        if (!index) {
+                            obj['age'] = '18';
+                            obj['qty'] = input.value;
+                        } else {
+                            obj['age'] = input.value;
+                            obj['qty'] = '1';
+                        }
+                        object[index] = obj;
+                    })
+
+                    if (Object.entries(object).length === 0) {
+                        delete fields[name];
+                    } else {
+                        fields[name] = object;
+                    }
+
+                    break;
+                case 'date':
+                case 'price':
+                    el.querySelectorAll('.js__input').forEach((input) => {
+                        if (input.value) {
+                            fields[input.name] = input.value;
+                        } else {
+                            delete fields[input.name];
+                        }
+                    })
+                    break;
+                case 'hot':
+                    let input = el.querySelector('.js__input')
+                    if (input.checked) {
+                        fields[input.name] = input.value;
+                    } else {
+                        delete fields[input.name];
+                    }
+                    break;
+                case 'tags':
+                    let arr = [];
+                    el.querySelectorAll('.js__input').forEach((input) => {
+
+                        if (input.value) {
+                            arr.push(input.value)
+                        }
+                    })
+                    if (arr.length) {
+                        fields[name] = arr;
+                    } else {
+                        delete fields[name];
+                    }
+                    break;
+                default:
+                    el.querySelectorAll('.js__input').forEach((input) => {
+                        if (input.checked) {
+                            array.push(input.value);
+                        }
+                    })
+
+                    if (array.length) {
+                        fields[name] = array;
+                    } else {
+                        delete fields[name];
+                    }
+
+                    break;
+            }
+        })
+    };
+
+    createFieldChild() {
+        const wrapper = document.querySelector('.js__block-quantity-children'),
+            allBlocksWithAgeChildren = Array.from(wrapper.querySelectorAll('.js__children-block')),
+            blockToInsert = wrapper.querySelector('.js__age-of-children-container'),
+            createElement = wrapper.querySelector('.js__copy-block-children-age').cloneNode(true);
+
+        createElement.classList.remove('hidden-el', 'js__copy-block-children-age');
+        createElement.classList.add('js__children-block');
+        createElement.querySelector('.js__children-age').textContent = allBlocksWithAgeChildren.length + 1;
+        createElement.querySelector('.js__qty-field').classList.add('js__input');
+
+        const createBlock = blockToInsert.appendChild(createElement);
+        this.setQuantityHandlers(createBlock);
+        return createBlock;
+    };
+
+    setQuantityHandlers(container) {
+        const counters = container.querySelectorAll('.js__quantity');
+
+        if (!counters.length) {
+            return;
+        }
+
+        counters.forEach((elem) => {
+            const btns = elem.querySelectorAll('.js__qty-btn');
+            const quantityField = elem.querySelector('.js__qty-field');
+            const maxNumber = parseInt(quantityField.dataset.max);
+
+            btns.forEach((btn) => {
+                btn.addEventListener('click', (evt) => {
+                    Sensei.ignoreEvent(evt);
+
+                    let value = Number(quantityField.value);
+                    let step = (btn.dataset.action === 'dec') ? -1 : 1;
+
+                    value = value + step;
+
+                    if (value < 1) {
+                        value = 0;
+                    }
+
+                    quantityField.value = value;
+                    quantityField.dispatchEvent(new Event('change'));
+
+                    if (elem.classList.contains('js__children-quantity')) {
+                        const wrapper = elem.closest('.js__block-quantity-children');
+                        const allBlocksWithAgeChildren = Array.from(wrapper.querySelectorAll('.js__children-block'));
+
+                        if (btn.dataset.action === 'inc' && !(value >= maxNumber)) {
+                            this.createFieldChild();
+                        }
+
+                        if (btn.dataset.action === 'dec' && allBlocksWithAgeChildren.length) {
+                            allBlocksWithAgeChildren.at(-1).remove();
+                        }
+
+                        document.querySelector('.js__children-quantity-input').value = quantityField.value;
+                    }
+
+                    if (elem.classList.contains('js__adults-quantity')) {
+                        document.querySelector('.js__adults-quantity-input').value = quantityField.value;
+
+                    }
+                });
+            });
+
+            quantityField.addEventListener('change', (evt) => {
+                const input = evt.target;
+                const maxNumber = parseInt(input.dataset.max);
+
+                if (evt.target.value >= maxNumber) {
+                    evt.target.value = maxNumber - 1;
+                }
+            })
+        });
+    };
+
+    getSearchParams() {
+        let fields = {};
+        let queryDict = {};
+        let searchParams = location.search;
+
+        if (!searchParams) {
+            return fields;
+        }
+        searchParams.slice(1).split("&").forEach((item) => {
+            queryDict[item.split("=")[0]] = item.split("=")[1];
+        });
+
+        try {
+            fields = JSON.parse(Sensei.base64_decode(queryDict.s))
+            return fields;
+        } catch (err) {
+            return fields;
+        }
+
+    };
+}
