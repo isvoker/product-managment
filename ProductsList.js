@@ -406,37 +406,7 @@ class ProductsList extends Products {
 
             const createdElement = insert.appendChild(cloneElement);
             const btnRemove = createdElement.querySelector('.js__applied-filters-remove');
-
-            /*let name = '';
-            for (const attributeKey in schema) {
-                if (attributeKey === key && schema.hasOwnProperty(attributeKey)) {
-                    name = schema[attributeKey].description;
-                }
-            }
-
-            switch (key) {
-                case 'tags':
-                    name = 'Тэги';
-                    break;
-                case 'date_begin':
-                    name = 'Дата начала';
-                    break;
-                case 'date_end':
-                    name = 'Дата окончания';
-                    break;
-                case 'party':
-                    name = 'Кол-во людей';
-                    break;
-                case 'price_min':
-                    name = 'Цена от';
-                    break;
-                case 'price_max':
-                    name = 'Цена до';
-                    break;
-            }
-
-            cloneElement.querySelector('.js__applied-filters-name').textContent = name;*/
-
+        
             ProductAttribute.loadDescription(this.typeId, key).then((name) => {
                 cloneElement.querySelector('.js__applied-filters-name').textContent = name;
             });
